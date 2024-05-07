@@ -12,19 +12,19 @@ import './index.css'
 const employmentTypesList = [
   {
     label: 'Full Time',
-    employmentTypeId: 'FULLTIME',
+    id: 'FULLTIME',
   },
   {
     label: 'Part Time',
-    employmentTypeId: 'PARTTIME',
+    id: 'PARTTIME',
   },
   {
     label: 'Freelance',
-    employmentTypeId: 'FREELANCE',
+    id: 'FREELANCE',
   },
   {
     label: 'Internship',
-    employmentTypeId: 'INTERNSHIP',
+    id: 'INTERNSHIP',
   },
 ]
 
@@ -47,6 +47,29 @@ const salaryRangesList = [
   },
 ]
 
+const locationList = [
+  {
+    id: 'Hyderabad',
+    label: 'Hyderabad',
+  },
+  {
+    id: 'Bangalore',
+    label: 'Bangalore',
+  },
+  {
+    id: 'Chennai',
+    label: 'Chennai',
+  },
+  {
+    id: 'Delhi',
+    label: 'Delhi',
+  },
+  {
+    id: 'Mumbai',
+    label: 'Mumbai',
+  },
+]
+
 const compStatus = {
   inProgress: 'LOADING',
   failed: 'FAILED',
@@ -54,18 +77,19 @@ const compStatus = {
 }
 
 const Filters = props => {
-  const {changeSalary, changeEmployment} = props
+  const {changeSalary, changeEmployment, changeLocation} = props
   const onChangeEmployment = val => changeEmployment(val)
   const onChangeSalary = val => changeSalary(val)
+  const onChangeLocation = val => changeLocation(val)
   return (
-    <div className="filters">
+    <div className="filters sidebar">
       <hr />
       <h1>Type of Employment</h1>
       <ul>
         {employmentTypesList.map(item => (
           <Checkbox
             itemDetails={item}
-            key={item.employmentTypeId}
+            key={item.id}
             callFunc={onChangeEmployment}
           />
         ))}
@@ -78,6 +102,17 @@ const Filters = props => {
             itemDetails={item}
             key={item.salaryRangeId}
             updateSalaryRange={onChangeSalary}
+          />
+        ))}
+      </ul>
+      <hr />
+      <h1>Location</h1>
+      <ul>
+        {locationList.map(item => (
+          <Checkbox
+            itemDetails={item}
+            key={item.id}
+            callFunc={onChangeLocation}
           />
         ))}
       </ul>
@@ -126,17 +161,12 @@ const Loading = () => (
 
 const Checkbox = props => {
   const {itemDetails, callFunc} = props
-  const {employmentTypeId, label} = itemDetails
-  const onCallFunc = () => callFunc(employmentTypeId)
+  const {id, label} = itemDetails
+  const onCallFunc = () => callFunc(id)
   return (
     <li>
-      <input
-        type="checkbox"
-        id={employmentTypeId}
-        value={employmentTypeId}
-        onChange={onCallFunc}
-      />
-      <label htmlFor={employmentTypeId}>{label}</label>
+      <input type="checkbox" id={id} value={id} onChange={onCallFunc} />
+      <label htmlFor={id}>{label}</label>
     </li>
   )
 }
@@ -227,6 +257,7 @@ class Jobs extends Component {
   state = {
     salary: '',
     employment: [],
+    location: [],
     sch: '',
     compState: compStatus.inProgress,
     jobsList: [],
@@ -276,6 +307,24 @@ class Jobs extends Component {
     this.setState({salary: val, compState: compStatus.inProgress}, this.getData)
   }
 
+  changeLocation = val => {
+    this.setState(prevState => {
+      if (prevState.location.includes(val)) {
+        const idx = prevState.location.indexOf(val)
+        const tempArr = [...prevState.location]
+        tempArr.splice(idx, 1)
+        return {
+          location: tempArr,
+          compState: compStatus.inProgress,
+        }
+      }
+      return {
+        location: [...prevState.location, val],
+        compState: compStatus.inProgress,
+      }
+    }, this.getData)
+  }
+
   changeEmployment = val => {
     this.setState(prevState => {
       if (prevState.employment.includes(val)) {
@@ -297,11 +346,15 @@ class Jobs extends Component {
   changeSch = val => this.setState({sch: val})
 
   renderJobCards = () => {
-    const {jobsList} = this.state
+    const {jobsList, location} = this.state
+    const filteredList =
+      location.length > 0
+        ? jobsList.filter(item => location.includes(item.location))
+        : jobsList
     return (
       <ul className="jobs-con">
         {jobsList.length > 0 ? (
-          jobsList.map(item => <JobCard itemDetails={item} key={item.id} />)
+          filteredList.map(item => <JobCard itemDetails={item} key={item.id} />)
         ) : (
           <div>
             <img
@@ -338,11 +391,12 @@ class Jobs extends Component {
               dataFun={this.getData}
               val={sch}
             />
-            <div className="md-order-1 sidebar">
+            <div className="md-order-1">
               <ProfileCard />
               <Filters
                 changeEmployment={this.changeEmployment}
                 changeSalary={this.changeSalary}
+                changeLocation={this.changeLocation}
               />
             </div>
             {compState === compStatus.inProgress ? (
