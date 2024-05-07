@@ -11,6 +11,10 @@
   outline: none;
 }
 
+.search-inp {
+  color: white;
+}
+
 .failed {
   text-align: center;
   min-height: 100vh;
